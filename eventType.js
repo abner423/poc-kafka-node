@@ -16,8 +16,8 @@ module.exports = avro.Type.forSchema({
             type: 'string'
         },
         {
-            name: 'idade',
-            type: 'int',
+            name: 'resumo',
+            type: 'string',
         }
     ]
 });

@@ -10,11 +10,11 @@ consumer.connect();
 
 consumer.on('ready', () => {
     console.log('consumer ready..')
-    consumer.subscribe(['email']);
+    consumer.subscribe(['user']);
     consumer.consume();
 }).on('data', function (data) {
     let user = eventType.fromBuffer(data.value)
     console.log(`sending mail ...\n`);
     console.log(`Ola ${user.nome},`)
-    console.log(`Você acaba de ser cadastrado na nossa api de usuários com a idade de ${user.idade} e email ${user.email}, se não for você por favor nos reporte via email\n`);
+    console.log(`Você acaba de ser cadastrado na nossa api de usuários com email ${user.email}, se não for você por favor nos reporte via email\n`);
 });
