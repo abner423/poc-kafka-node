@@ -10,12 +10,25 @@ if __name__ == '__main__':
     ssc = StreamingContext(sc, 10)
 
     palavras = ssc.socketTextStream('192.168.0.21', 9999)\
-                  .flatMap(lambda linha: linha.split(' '))
+            .flatMap(lambda linha: linha.split(' '))
 
-    palavras_map = palavras.map(lambda palavra: (palavra, 1))
-    total_por_palavra = palavras_map.reduceByKey(lambda a, b: a + b)
+    palavras_total = palavras\
+            .map(lambda palavra: (palavra, 1))\
+            .reduceByKey(lambda a, b: a + b)
 
-    total_por_palavra.pprint()
+    palavras_chars = palavras\
+            .filter(lambda palavra: palavra.startswith(('S', 'P', 'R')))\
+            .map(lambda palavra: (palavra, 1))\
+            .reduceByKey(lambda a, b: a + b)
+
+    palavras_tam = palavras\
+            .filter(lambda palavra: len(palavra) in (6, 8, 11))\
+            .map(lambda palavra: (palavra, 1))\
+            .reduceByKey(lambda a, b: a + b)
+
+    palavras_total.pprint()
+    palavras_chars.pprint()
+    palavras_tam.pprint()
 
     ssc.start()
     ssc.awaitTermination()
