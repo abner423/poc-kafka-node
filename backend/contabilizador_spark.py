@@ -18,12 +18,12 @@ if __name__ == '__main__':
 
     palavras_chars = palavras\
             .filter(lambda palavra: palavra.startswith(('S', 'P', 'R')))\
-            .map(lambda palavra: (palavra, 1))\
+            .map(lambda palavra: (palavra[0], 1))\
             .reduceByKey(lambda a, b: a + b)
 
     palavras_tam = palavras\
             .filter(lambda palavra: len(palavra) in (6, 8, 11))\
-            .map(lambda palavra: (palavra, 1))\
+            .map(lambda palavra: (len(palavra), 1))\
             .reduceByKey(lambda a, b: a + b)
 
     palavras_total.pprint()
