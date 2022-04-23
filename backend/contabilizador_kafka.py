@@ -4,79 +4,77 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import explode, split, window, desc, col, length
 
 
+class SparkKafka:
+
+    def __init__(self, argv):
+        self.topicos = ','.join([argv[i] for i in range(3, len(argv))])
+        self.broker = argv[2]
+        self.timestamp = argv[1]
+
+        self.spark = SparkSession.builder \
+            .master('spark://192.168.0.21:7077') \
+            .appName('SparkKafkaCluster') \
+            .getOrCreate()
+
+        self.spark.sparkContext.setLogLevel('WARN')
+        self.df = self.__inicializa_dataFrame()
+        self.palavras = self.df.select(explode(split(self.df.value, ' ')) \
+            .alias('value'), self.df.timestamp)
+
+    def __inicializa_dataFrame(self):
+        return self.spark.readStream \
+            .format('kafka') \
+            .option('kafka.bootstrap.servers', self.broker) \
+            .option('subscribe', self.topicos) \
+            .option('includeTimestamp', 'true') \
+            .load()
+
+    def _aplica_timestamp(self, query):
+        return query \
+            .withWatermark('timestamp', f'{self.timestamp} seconds') \
+            .groupBy(
+                window(col('timestamp'), f'{self.timestamp} seconds', f'{self.timestamp} seconds'),
+                col('value')) \
+            .count().sort(desc('window'))
+
+    def retorna_stream_de_escrita(self, querys):
+        return [self._aplica_timestamp(getattr(self, q)) \
+            .writeStream \
+            .outputMode('complete') \
+            .format('console') \
+            .option('truncate', 'false') \
+            .start()
+            for q in querys
+        ]
+
+    def espera_execucao(self, streams):
+        for s in streams:
+            s.awaitTermination()
+
+    @property
+    def filtra_por_char(self):
+        return self.palavras \
+            .select(col('timestamp'), col('value').substr(1, 1).alias('value')) \
+            .where(col('value').rlike('^[SPR]')) \
+
+    @property
+    def filtra_por_quantidade(self):
+        return self.palavras \
+            .select(col('timestamp'), length(col('value')).alias('value')) \
+            .where(col('value').isin([6, 8, 11])) \
+
+
 if __name__ == '__main__':
 
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print(
-            'Uso correto: contabilizador_kafka.py <broker kafka> '
+            'Uso correto: contabilizador_kafka.py <timestamp> <broker kafka> '
             '<lista de tópicos kafka>', file=sys.stderr
         )
         sys.exit(-1)
 
-    topicos = ','.join([sys.argv[i] for i in range(2, len(sys.argv))])
-
-    spark = SparkSession.builder \
-        .master('spark://192.168.0.21:7077') \
-        .appName('SparkKafkaCluster') \
-        .getOrCreate()
-
-    spark.sparkContext.setLogLevel('WARN')
-
-    df = spark.readStream \
-        .format('kafka') \
-        .option('kafka.bootstrap.servers', sys.argv[1]) \
-        .option('subscribe', topicos) \
-        .option('includeTimestamp', 'true') \
-        .load()
-
-    palavras = df.select(explode(split(df.value, ' ')).alias('palavra'), df.timestamp)
-
-    palavras_total = palavras \
-        .withWatermark('timestamp', '10 seconds') \
-        .groupBy(
-            window(palavras.timestamp, '10 seconds', '10 seconds'),
-            palavras.palavra) \
-        .count().sort(desc('window'))
-
-    palavras_chars = palavras \
-        .select(palavras.timestamp, palavras.palavra.substr(1, 1).alias('letra')) \
-        .where(col('letra').rlike('^[SPR]')) \
-        .withWatermark('timestamp', '10 seconds') \
-        .groupBy(
-            window(palavras.timestamp, '10 seconds', '10 seconds'),
-            col('letra')) \
-        .count().sort(desc('window'))
-
-    palavras_quantidade = palavras \
-        .select(palavras.timestamp, length(palavras.palavra).alias('quantidade')) \
-        .where(col('quantidade').isin([6, 8, 11])) \
-        .withWatermark('timestamp', '10 seconds') \
-        .groupBy(
-            window(palavras.timestamp, '10 seconds', '10 seconds'),
-            col('quantidade')) \
-        .count().sort(desc('window'))
-
-    query_total = palavras_total \
-        .writeStream \
-        .outputMode('complete') \
-        .format('console') \
-        .option('truncate', 'false') \
-        .start()
-
-    query_chars = palavras_chars \
-        .writeStream \
-        .outputMode('complete') \
-        .format('console') \
-        .option('truncate', 'false') \
-        .start()
-
-    query_quatidade = palavras_quantidade \
-        .writeStream \
-        .outputMode('complete') \
-        .format('console') \
-        .option('truncate', 'false') \
-        .start()
-
-    query_total.awaitTermination()
-    query_chars.awaitTermination()
-    query_quatidade.awaitTermination()
+    sparkKafka = SparkKafka(sys.argv)
+    streams = sparkKafka.retorna_stream_de_escrita([
+        'palavras', 'filtra_por_char', 'filtra_por_quantidade'
+    ])
+    sparkKafka.espera_execucao(streams)
