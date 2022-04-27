@@ -1,5 +1,7 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
+app.use(cors());
 var bodyParser = require('body-parser');
 const eventType = require('../eventType');
 const Kafka = require('node-rdkafka');
@@ -36,12 +38,12 @@ app.get('/users', (req, res) => {
 })
 
 app.post('/users', (req, res) => {
-    let { nome, email, descricao } = req.body
+    let { nome, email, resumo } = req.body
     let id = 1
     if (users.length != 0)
         id = users[users.length - 1].id + 1
 
-    let user = { id, nome, email, descricao };
+    let user = { id, nome, email, resumo };
 
     users.push(user)
     writeMessage(user);
