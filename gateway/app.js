@@ -13,7 +13,7 @@ const stream = Kafka.Producer.createWriteStream({
 });
 
 function writeMessage(user) {
-    const success = stream.write(eventType.toBuffer(user));
+    const success = stream.write(JSON.stringify(user));
 
     if (success) {
         console.log(`message queued (${JSON.stringify(user)})`);

@@ -31,8 +31,9 @@ consumer.on('ready', () => {
     consumer.subscribe(['user']);
     consumer.consume();
 }).on('data', function (data) {
-    let user = eventType.fromBuffer(data.value)
-    console.log('Mensagem recebida, enviando por email ...');
+    // let user = eventType.fromBuffer(data.value)
+    let user = JSON.parse(data.value)
+    console.log(`Mensagem recebida, ${JSON.stringify(user)} enviando email ...`);
     const mailOptions = {
         from: 'pspdunb@gmail.com', // sender address
         to: user.email, // list of receivers
@@ -46,6 +47,8 @@ consumer.on('ready', () => {
             console.log('Email enviado: ' + info.response);
         }
     });
+}).on('event.error', function (error) {
+    console.log("Erro aqui ", error)
 });
 
 app.post('/sendMail', (req, res) => {
