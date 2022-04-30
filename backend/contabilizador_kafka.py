@@ -1,7 +1,10 @@
 import sys
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import explode, split, window, desc, col, length
+from pyspark.sql.functions import (
+    explode, split, window, desc, col,
+    length, to_json, struct, from_json
+)
 
 
 class SparkKafka:
@@ -18,16 +21,20 @@ class SparkKafka:
 
         self.spark.sparkContext.setLogLevel('WARN')
         self.df = self.__inicializa_dataFrame()
-        self.palavras = self.df.select(explode(split(self.df.value, ' ')) \
-            .alias('value'), self.df.timestamp)
+        self.palavras = self.df.select(explode(split(
+            from_json(self.df.value.cast('string'), 'resumo STRING').resumo,
+            ' '
+        )).alias('value'), self.df.timestamp)
 
     def __inicializa_dataFrame(self):
         return self.spark.readStream \
             .format('kafka') \
             .option('kafka.bootstrap.servers', self.broker) \
             .option('subscribe', self.topicos) \
+            .option('startingOffsets', 'latest') \
+            .option('failOnDataLoss', 'false') \
             .option('includeTimestamp', 'true') \
-            .load()
+            .load() \
 
     def _aplica_timestamp(self, query):
         return query \
@@ -35,11 +42,17 @@ class SparkKafka:
             .groupBy(
                 window(col('timestamp'), f'{self.timestamp} seconds', f'{self.timestamp} seconds'),
                 col('value')) \
-            .count().sort(desc('window'))
+            .count()
 
     def retorna_stream_de_escrita(self, querys):
         return [self._aplica_timestamp(getattr(self, q)) \
+            .select(to_json(struct('*')).alias('json')) \
+            .selectExpr('json AS value') \
             .writeStream \
+            # .option("checkpointLocation", "hdfs://192.168.0.21:9000/spark/") \
+            # .format('kafka') \
+            # .option('kafka.bootstrap.servers', self.broker) \
+            # .option('topic', 'testcluster2') \
             .outputMode('complete') \
             .format('console') \
             .option('truncate', 'false') \
