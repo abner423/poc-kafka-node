@@ -1,15 +1,54 @@
-# Compose up
-    docker-compose up
+# Kafka-Node Spark Cluster
 
-# Create topic
-    docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh \ --create \ --bootstrap-server localhost:9092 \ --replication-factor 1 \ --partitions 1 \ --topic user
+## Backend
+### Rodando um docker-compose
 
-# Install libs
-    npm install
+```
+$ docker-compose -f docker-compose.[compose desejado].yml up
+```
 
-# Run microservices
-    npm run start:gateway
-    npm run start:email
+### Rodando múltiplos composes do spark worker
 
-# List messages from one topic
-    docker exec -it kafka /opt/bitnami/kafka/bin/kafka-console-consumer.sh \ --bootstrap-server localhost:9092 \ --from-beginning \ --topic user
+```
+$ docker-compose -f docker-compose.spark_worker.yml up --scale spark-worker=N
+
+# Para saber em que portas os serviços foram abertos
+docker-compose ps
+```
+
+### Utilizando o Kafka
+
+```
+# Para criar novas filas
+$ docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server 192.168.0.21:9092 \
+  --topic NomeTópico --replication-factor 1 --partitions 1
+
+# Para se inscrever em uma fila como produtor
+$ docker exec -it kafka /opt/bitnami/kafka/bin/kafka-console-producer.sh --topic testcluster \
+  --bootstrap-server 192.168.0.21:9092
+
+# Para se inscrever em uma fila como consumidor
+$ docker exec -it kafka /opt/bitnami/kafka/bin/kafka-console-consumer.sh --topic testcluster \
+  --from-beginning --bootstrap-server 192.168.0.21:9092
+```
+
+### Dando submit em tasks para o cluster Spark
+
+```
+$ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1 contabilizador_kafka.py \
+  IntervaloDeJanela 192.168.0.21:9092 NomeFila
+```
+<!-- spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.13:3.2.1 contabilizador_kafka.py 192.168.0.21:9092 teste_cluster -->
+
+## Frontend
+### Intalando bibliotecas
+
+```
+$ npm install
+```
+
+### Rodando os Microserviços
+```
+$ npm run start:gateway
+$ npm run start:email
+```
