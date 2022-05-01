@@ -62,7 +62,7 @@ class SparkKafka:
             # .option("checkpointLocation", "hdfs://192.168.0.21:9000/spark/") \
             # .format('kafka') \
             # .option('kafka.bootstrap.servers', self.broker) \
-            # .option('topic', '') \
+            # .option('topic', 'testcluster2') \
             .outputMode('complete') \
             .format('console') \
             .option('truncate', 'false') \
@@ -86,7 +86,7 @@ class SparkKafka:
     @property
     def filtra_por_quantidade(self):
         return self.palavras \
-            .select(col('timestamp'), length(col('value')).alias('value')) \
+            .select(col('timestamp'), length(col('value')).alias('value').cast('string')) \
             .where(col('value').isin([6, 8, 11])) \
 
 

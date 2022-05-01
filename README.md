@@ -41,7 +41,7 @@ $ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.1 conta
 <!-- spark-submit --packages org.apache.spark:spark-streaming-kafka-0-10_2.13:3.2.1 contabilizador_kafka.py 192.168.0.21:9092 teste_cluster -->
 
 ## Frontend
-### Intalando bibliotecas
+### Intalando Bibliotecas
 
 ```
 $ npm install
@@ -51,4 +51,15 @@ $ npm install
 ```
 $ npm run start:gateway
 $ npm run start:email
+```
+
+## Relatório
+### Instalando Dependências
+```
+$ pip install -r requirements.txt
+```
+
+### Rodando o relatório
+```
+$ python gerador_relatorio.py
 ```
