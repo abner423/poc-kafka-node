@@ -3,7 +3,6 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 var bodyParser = require('body-parser');
-const eventType = require('../eventType');
 const Kafka = require('node-rdkafka');
 
 const stream = Kafka.Producer.createWriteStream({
