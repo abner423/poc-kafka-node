@@ -1,5 +1,15 @@
 # Kafka-Node Spark Cluster
 
+## Sobre
+Projeto final da matéria de Progamação para Sistemas Paralelos e Distribuídos da FGA utilizandos conceitos de Spark Streaming e Apache Kafka
+
+## Arquitetura do projeto
+![diagrama](./assets/resultadoObtido.png)
+
+## Front-end da aplicação
+
+![frontTela1](./assets/front1.png)
+![frontTela2](./assets/front2.png)
 ## Backend
 ### Rodando um docker-compose
 
