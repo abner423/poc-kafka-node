@@ -1,4 +1,5 @@
 import "./Signup.css";
+import { useNavigate } from "react-router-dom";
 import Check from './assets/check.png';
 import Head from './assets/head.png';
 import Dotted from './assets/dotted.jpg';
@@ -7,19 +8,26 @@ import { useState } from "react";
 import api from "./api";
 
 function Signup() {
+  let navigate = useNavigate();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [resumo, setResumo] = useState("");
 
   async function clique() {
-    console.log(`Nome: ${nome} / Email: ${email} / Resumo: ${resumo}`);
-    const data = {
-      nome,
-      email,
-      resumo
-    };
-    const response = await api.post("users", data);
-    console.log(response);
+
+    if (nome.trim() !== "" && email.trim() !== "" && resumo.trim() !== "") {
+      console.log(`Nome: ${nome} / Email: ${email} / Resumo: ${resumo}`);
+      const data = {
+        nome,
+        email,
+        resumo
+      };
+      const response = await api.post("users", data);
+      navigate("/", { replace: true });
+      console.log(response);
+    } else {
+
+    }
   }
 
   return (
