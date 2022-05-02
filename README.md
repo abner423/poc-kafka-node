@@ -4,7 +4,10 @@
 Projeto final da matéria de Progamação para Sistemas Paralelos e Distribuídos da FGA utilizandos conceitos de Spark Streaming e Apache Kafka
 
 ## Arquitetura do projeto
-![diagrama](./assets/resultadoObtido.png)
+
+<div align="center">
+  <img src="./assets/resultadoObtido.png" alt="diagrama"/>
+</div>
 
 ## Front-end da aplicação
 
